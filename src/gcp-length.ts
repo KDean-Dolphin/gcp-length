@@ -9,29 +9,31 @@ interface Node {
 let fromBinaryIndex = 0;
 
 function fromBinary(childNodes: Node[]): void {
-    let done: boolean;
+    const decompressedLengths = new Array<number>(10);
 
-    do {
+    for (let index = 0; index < 10; index += 2) {
         const byte = gcpLengthBinary[fromBinaryIndex++];
 
-        done = byte === 0xFF;
+        decompressedLengths[index] = byte >> 4;
+        decompressedLengths[index + 1] = byte & 0x0F;
+    }
 
-        if (!done) {
-            const index = byte >> 4;
-            const length = byte & 0xF;
+    for (let index = 0; index < 10; index++) {
+        const length = decompressedLengths[index];
 
+        if (length !== 0x0F) {
             const childNode = {
                 length,
                 childNodes: []
             };
 
+            childNodes[index] = childNode;
+
             if (length === 0) {
                 fromBinary(childNode.childNodes);
             }
-
-            childNodes[index] = childNode;
         }
-    } while (!done);
+    }
 }
 
 const rootNode = {
